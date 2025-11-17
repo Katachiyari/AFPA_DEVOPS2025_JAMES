@@ -1,0 +1,136 @@
+TP Powershell : ssh Linux
+ 
+Créez un script powershell qui se connecte en SSH sur un environnement linux ( utiliser le module posh-ssh https://www.it-connect.fr/posh-ssh-connexion-ssh-depuis-powershell-sous-windows/ ) 
+Votre script PowerShell permet de sélectionner un script bash dans un répertoire dédié sur votre poste ( mais en utilisant une boite de dialogue (filechooser) qui permette de sélectionner n'importe quel fichier. 
+Le script bash ou le fichier sélectionné doit pouvoir être envoyé en scp vers un hôte linux (via ip) dans un emplacement que l'on peux définir ( chemin par défaut : home de l'utilisateur, mais je peux vouloir l'envoyer vers /var/www/html par exemple si je le souhaite ), et si c'est un script, celui-ci doit pouvoir être exécuté sur la machine distante.
+ 
+Créez une tache planifiée dans votre environnement windows, qui permette l'exécution toutes les heures d'un script powershell, afin de vérifier si le service apache2 est actif ( "systemctl status apache2", et si ce n'est pas le cas, votre script doit pouvoir relancer le service ( commande bash : "systemctl restart apache2"  via powershell ).
+ 
+ 
+Voici un script bash par exemple : 
+ 
+#!/bin/bash
+
+# ------------------------------------------
+
+# Installe figlet et ajoute un banner login dans ~/.bashrc
+
+# Affiche le hostname puis l'utilisateur en figlet à chaque session interactive
+
+# Compatible Debian/Ubuntu
+
+# ------------------------------------------
+ 
+# arreter l'execution du script en cas d'erreur
+set -e
+ 
+# --- Détermination de l'utilisateur cible ---
+
+TARGET_USER="${SUDO_USER:-$USER}"
+
+TARGET_HOME="$(eval echo "~$TARGET_USER")"
+
+BASHRC="${TARGET_HOME}/.bashrc"
+ 
+# --- Vérifs de base ---
+
+if [ -z "$TARGET_HOME" ] || [ ! -d "$TARGET_HOME" ]; then
+
+  echo " Impossible de déterminer le HOME de l'utilisateur cible."
+
+  exit 1
+
+fi
+ 
+# --- Installation de figlet (nécessite root/sudo) ---
+
+if ! command -v figlet >/dev/null 2>&1; then
+
+  if [ "$EUID" -ne 0 ]; then
+
+    echo "🔐 Installation de figlet requiert sudo/root. Tentative via sudo..."
+
+    sudo apt-get update -y
+
+    sudo apt-get install -y figlet
+
+  else
+
+    echo "📦 Installation de figlet..."
+
+    apt-get update -y
+
+    apt-get install -y figlet
+
+  fi
+
+else
+
+  echo " figlet est déjà installé."
+
+fi
+ 
+# --- Assure l'existence du .bashrc ---
+
+if [ ! -f "$BASHRC" ]; then
+
+  touch "$BASHRC"
+
+  chown "$TARGET_USER":"$TARGET_USER" "$BASHRC"
+
+fi
+ 
+# --- Bloc à insérer dans .bashrc ---
+
+MARK_START="# >>> figlet-login-banner >>>"
+
+MARK_END="# <<< figlet-login-banner <<<"
+ 
+BANNER_BLOCK=$(cat <<'EOF'
+
+# >>> figlet-login-banner >>>
+
+# Affiche un banner figlet au login (shell interactif uniquement)
+
+if [ -n "$PS1" ] && command -v figlet >/dev/null 2>&1; then
+
+  COLUMNS="$(tput cols 2>/dev/null || echo 80)"
+
+  HOSTNAME_TO_SHOW="$(hostname)"
+
+  USERNAME_TO_SHOW="${USER}"
+
+  figlet -w "$COLUMNS" "$HOSTNAME_TO_SHOW"
+
+  figlet -w "$COLUMNS" "$USERNAME_TO_SHOW"
+
+fi
+
+# <<< figlet-login-banner <<<
+
+EOF
+
+)
+ 
+# --- Injection idempotente ---
+
+if grep -qF "$MARK_START" "$BASHRC"; then
+
+  echo "  Bloc déjà présent dans ${BASHRC} (aucune duplication)."
+
+else
+
+  echo " Ajout du banner figlet dans ${BASHRC}..."
+
+  printf "\n%s\n" "$BANNER_BLOCK" >> "$BASHRC"
+
+  chown "$TARGET_USER":"$TARGET_USER" "$BASHRC"
+
+fi
+ 
+echo " Terminé ! "
+ 
+ 
+ 
+Le module Posh-SSH pour PowerShell permet de se connecter en SSH sur un serveur Linux/Unix pour exécuter des commandes et transférer des fichiers via SCP/SFTP.
+ 
