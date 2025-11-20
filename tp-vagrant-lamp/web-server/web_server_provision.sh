@@ -68,3 +68,6 @@ else
 fi
 
 echo "[SUCCESS] Provisioning du web-server terminé avec succès."
+
+# exécuter le script de provisionnement côté guest (copié et lancé par Vagrant)
+web_config.vm.provision "shell", path: "web-server/web_server_provision.sh"
