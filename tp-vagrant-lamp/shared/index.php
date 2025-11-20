@@ -107,6 +107,7 @@ $users = $pdo->query("SELECT * FROM users ORDER BY id DESC")->fetchAll();
                 <label for="email" class="form-label">E-mail</label>
                 <input type="email" id="email" name="email" required class="form-control"
                     value="<?= $user_edit ? sanitize($user_edit['email']) : '' ?>" autocomplete="off" />
+                <div class="form-text">L’email doit contenir un caractère <code>@</code> valide.</div>
             </div>
             <button type="submit" class="btn btn-primary w-100">
                 <?= $user_edit ? "Mettre à jour" : "Envoyer" ?>
