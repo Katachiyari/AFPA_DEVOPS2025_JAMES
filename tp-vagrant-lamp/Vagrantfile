@@ -37,7 +37,7 @@ Vagrant.configure("2") do |config|
       rm -f /var/www/html/index.html
 
       # Création d'un index.php pour tester la connexion DB
-      cat << 'EOF' > /var/www/html/index.php
+        cat << 'EOF' > /var/www/html/index.php
         <?php
         $conn = new mysqli('192.168.56.11', 'tp_user', 'tp_password', 'tp_db');
         if ($conn->connect_error) {
@@ -46,10 +46,8 @@ Vagrant.configure("2") do |config|
             echo 'Connexion à la base de données réussie !';
         }
         ?>
-    EOF
-
+        EOF
   end
-
 end
  
     ##### Options  #########################################################################################################    
