@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -e # --> IA m'a conseillé de mettre
+set -e # --> IA m'a conseillé de mettre, sur le reste quelques correction de syntaxe.
+#exemple le if ! dpkg -s apache2 >/dev/null 2>&1; then, moi je venais test avec if ! command -v apache2 >/dev/null 2>&1; then
 
 apt-get update
 
