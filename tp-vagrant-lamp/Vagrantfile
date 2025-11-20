@@ -11,7 +11,7 @@ Vagrant.configure("2") do |config|
     end
 
     # Provisionnement via script shell
-    db.vm.provision "shell", path: "./db_server/db_serverprovision.sh"
+    db.vm.provision "shell", path: "./db_server/db_server_provision.sh"
   end
 
   # VM 2 : Serveur Web (web-server)
