@@ -22,6 +22,28 @@ systemctl restart apache2
 
 echo "[INFO] Installation et configuration du dossier partagé terminée. Vérification index.php..."
 
+# Assurer les permissions/ownership pour Apache si possible
+mkdir -p /var/www/html
+# Détecter le type de montage pour /var/www/html (ex: vboxsf ne permet pas chown)
+MOUNT_TYPE=$(awk '$2=="/var/www/html" {print $3}' /proc/mounts || true)
+if [ "$MOUNT_TYPE" = "vboxsf" ]; then
+    echo "[INFO] /var/www/html est monté avec vboxsf; ownership géré par les options de montage."
+else
+    if chown -R www-data:www-data /var/www/html 2>/dev/null; then
+        echo "[INFO] Ownership de /var/www/html défini sur www-data:www-data."
+    else
+        echo "[WARN] Impossible de changer ownership de /var/www/html (chown a échoué)." >&2
+    fi
+fi
+# Assurer des permissions lisibles/exécutables pour les dossiers
+chmod -R u=rwX,g=rX,o=rX /var/www/html 2>/dev/null || true
+
+# Journal & socket info pour diagnostiquer accès HTTP
+echo "[INFO] Vérification écoute sur le port 80..." 
+ss -ltnp 2>/dev/null | grep ':80' || echo "[WARN] Aucun service n'écoute sur le port 80 (vérifiez Apache)."
+echo "[INFO] Derniers logs Apache:" 
+journalctl -u apache2 --no-pager -n 50 2>/dev/null | sed -n '1,200p' || echo "[WARN] journalctl non disponible ou aucun log Apache."
+
 # Vérification de la présence de index.php dans /var/www/html (monté depuis ./shared)
 if [ ! -f /var/www/html/index.php ]; then
 cat <<'EOF' > /var/www/html/index.php
