@@ -29,6 +29,8 @@ Vagrant.configure("2") do |config|
     web.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install -y apache2 php php-mysql
+      chown -R www-data:www-data /var/www
+      sudo chmod -R 775 /var/www
       systemctl enable apache2
       systemctl start apache2
       rm -f /var/www/html/index.html
